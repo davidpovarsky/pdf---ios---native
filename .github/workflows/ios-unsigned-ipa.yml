@@ -1,0 +1,78 @@
+name: Build unsigned iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-unsigned-ipa:
+    name: Build unsigned IPA for AltStore
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    env:
+      PROJECT: TorahPDFReader.xcodeproj
+      SCHEME: TorahPDFReader
+      CONFIGURATION: Release
+      BUNDLE_ID: com.davidpovarsky.TorahPDFReader
+      DERIVED_DATA: ${{ runner.temp }}/DerivedData
+      OUTPUT_DIR: ${{ runner.temp }}/ipa-output
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: List project schemes
+        run: |
+          xcodebuild -project "$PROJECT" -list
+
+      - name: Build unsigned app
+        run: |
+          set -euo pipefail
+
+          xcodebuild clean build \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration "$CONFIGURATION" \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath "$DERIVED_DATA" \
+            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+
+          APP_PATH=$(find "$DERIVED_DATA/Build/Products/${CONFIGURATION}-iphoneos" -maxdepth 1 -name "*.app" -print -quit)
+
+          if [ -z "$APP_PATH" ]; then
+            echo "No .app found"
+            find "$DERIVED_DATA/Build/Products" -maxdepth 3 -print
+            exit 1
+          fi
+
+          mkdir -p "$OUTPUT_DIR/Payload"
+          cp -R "$APP_PATH" "$OUTPUT_DIR/Payload/"
+
+          cd "$OUTPUT_DIR"
+          /usr/bin/zip -qry "TorahPDFReader-unsigned.ipa" Payload
+
+          ls -la "$OUTPUT_DIR"
+
+      - name: Upload unsigned IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TorahPDFReader-unsigned-IPA
+          path: ${{ runner.temp }}/ipa-output/TorahPDFReader-unsigned.ipa
+          if-no-files-found: error
