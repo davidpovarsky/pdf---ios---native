@@ -34,3 +34,6 @@
 "copied_into_library" = "Copied into library";
 "page_number_format" = "Page %d";
 "indexed_count_format" = "Indexed %d of %d pages";
+
+"share" = "Share";
+"more" = "More";

@@ -34,3 +34,6 @@
 "copied_into_library" = "הועתק לספרייה";
 "page_number_format" = "עמוד %d";
 "indexed_count_format" = "אונדקסו %d מתוך %d עמודים";
+
+"share" = "שיתוף";
+"more" = "עוד";

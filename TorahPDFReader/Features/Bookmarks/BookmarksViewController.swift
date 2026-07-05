@@ -11,6 +11,7 @@ final class BookmarksViewController: UITableViewController {
     private let store: LibraryStore
     private var bookmarks: [Bookmark] = []
     private let emptyLabel = UILabel()
+    var showsCloseButton = false
 
     init(book: Book, store: LibraryStore) {
         self.book = book
@@ -25,6 +26,7 @@ final class BookmarksViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = L10n.bookmarks
+        configureCloseButtonIfNeeded()
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "BookmarkCell")
         configureEmptyState()
         reloadBookmarks()
@@ -66,6 +68,19 @@ final class BookmarksViewController: UITableViewController {
             }
         }
         return UISwipeActionsConfiguration(actions: [deleteAction])
+    }
+
+    private func configureCloseButtonIfNeeded() {
+        guard showsCloseButton else { return }
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .close,
+            target: self,
+            action: #selector(closeTapped)
+        )
+    }
+
+    @objc private func closeTapped() {
+        dismiss(animated: true)
     }
 
     private func reloadBookmarks() {

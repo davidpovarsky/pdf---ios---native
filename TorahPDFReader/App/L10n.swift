@@ -31,6 +31,8 @@ enum L10n {
     static let unsupportedFile = text("unsupported_file")
     static let open = text("open")
     static let reindex = text("reindex")
+    static let share = text("share")
+    static let more = text("more")
     static let lastRead = text("last_read")
     static let indexingStarted = text("indexing_started")
     static let queryPlaceholder = text("query_placeholder")

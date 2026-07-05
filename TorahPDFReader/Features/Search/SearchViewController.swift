@@ -13,6 +13,7 @@ final class SearchViewController: UITableViewController {
     private var results: [SearchResult] = []
     private var pendingSearch: DispatchWorkItem?
     private let emptyLabel = UILabel()
+    var showsCloseButton = false
 
     var searchText: String {
         searchController.searchBar.text ?? ""
@@ -34,6 +35,7 @@ final class SearchViewController: UITableViewController {
         navigationItem.largeTitleDisplayMode = .never
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "SearchResultCell")
         configureSearchController()
+        configureCloseButtonIfNeeded()
         configureEmptyState(text: L10n.queryPlaceholder)
     }
 
@@ -62,6 +64,19 @@ final class SearchViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         delegate?.searchViewController(self, didSelect: results[indexPath.row])
+    }
+
+    private func configureCloseButtonIfNeeded() {
+        guard showsCloseButton else { return }
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .close,
+            target: self,
+            action: #selector(closeTapped)
+        )
+    }
+
+    @objc private func closeTapped() {
+        dismiss(animated: true)
     }
 
     private func configureSearchController() {

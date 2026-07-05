@@ -10,6 +10,34 @@ final class PDFReaderViewController: UIViewController {
     private var currentPageIndex: Int = 0
     private let initialPageIndex: Int?
     private let initialHighlightQuery: String?
+    private var readingBarsHidden = false
+
+    private lazy var searchItem = UIBarButtonItem(
+        image: UIImage(systemName: "magnifyingglass"),
+        style: .plain,
+        target: self,
+        action: #selector(searchTapped)
+    )
+
+    private lazy var bookmarksItem = UIBarButtonItem(
+        image: UIImage(systemName: "book"),
+        style: .plain,
+        target: self,
+        action: #selector(bookmarksTapped)
+    )
+
+    private lazy var addBookmarkItem = UIBarButtonItem(
+        image: UIImage(systemName: "bookmark"),
+        style: .plain,
+        target: self,
+        action: #selector(addBookmarkTapped)
+    )
+
+    private lazy var shareItem = UIBarButtonItem(
+        barButtonSystemItem: .action,
+        target: self,
+        action: #selector(shareTapped)
+    )
 
     init(
         book: Book,
@@ -30,15 +58,26 @@ final class PDFReaderViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override var prefersStatusBarHidden: Bool {
+        readingBarsHidden
+    }
+
+    override var prefersHomeIndicatorAutoHidden: Bool {
+        readingBarsHidden
+    }
+
     override func loadView() {
         view = UIView()
         view.backgroundColor = .systemBackground
+
         pdfView.translatesAutoresizingMaskIntoConstraints = false
         pdfView.backgroundColor = .systemBackground
         pdfView.autoScales = true
         pdfView.displayMode = .singlePageContinuous
         pdfView.displayDirection = .vertical
         pdfView.displaysPageBreaks = true
+        pdfView.usePageViewController(false)
+
         view.addSubview(pdfView)
         NSLayoutConstraint.activate([
             pdfView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -54,6 +93,7 @@ final class PDFReaderViewController: UIViewController {
         navigationItem.largeTitleDisplayMode = .never
         configureNavigationItems()
         configureToolbar()
+        configureReadingTapGesture()
         loadDocument()
         observePageChanges()
         observeIndexingChanges()
@@ -61,11 +101,13 @@ final class PDFReaderViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setToolbarHidden(false, animated: animated)
+        applyReadingBars(animated: animated)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        readingBarsHidden = false
+        navigationController?.setNavigationBarHidden(false, animated: animated)
         navigationController?.setToolbarHidden(true, animated: animated)
     }
 
@@ -74,47 +116,55 @@ final class PDFReaderViewController: UIViewController {
     }
 
     private func configureNavigationItems() {
-        let searchButton = UIBarButtonItem(
-            image: UIImage(systemName: "magnifyingglass"),
-            style: .plain,
-            target: self,
-            action: #selector(searchTapped)
-        )
-        searchButton.accessibilityLabel = L10n.searchThisBook
-
-        let bookmarkButton = UIBarButtonItem(
-            image: UIImage(systemName: "bookmark"),
-            style: .plain,
-            target: self,
-            action: #selector(addBookmarkTapped)
-        )
-        bookmarkButton.accessibilityLabel = L10n.addBookmark
-
         let moreButton = UIBarButtonItem(
             image: UIImage(systemName: "ellipsis.circle"),
             style: .plain,
             target: self,
             action: #selector(moreTapped)
         )
-
-        navigationItem.rightBarButtonItems = [moreButton, bookmarkButton, searchButton]
+        moreButton.accessibilityLabel = L10n.more
+        navigationItem.rightBarButtonItem = moreButton
     }
 
     private func configureToolbar() {
         pageLabel.font = .preferredFont(forTextStyle: .footnote)
         pageLabel.textColor = .secondaryLabel
         pageLabel.textAlignment = .center
+        pageLabel.adjustsFontForContentSizeCategory = true
+
         let pageItem = UIBarButtonItem(customView: pageLabel)
-        let bookmarksItem = UIBarButtonItem(
-            image: UIImage(systemName: "book"),
-            style: .plain,
-            target: self,
-            action: #selector(bookmarksTapped)
-        )
+        pageItem.accessibilityLabel = L10n.page
+
+        searchItem.accessibilityLabel = L10n.searchThisBook
         bookmarksItem.accessibilityLabel = L10n.bookmarks
-        let flexibleLeft = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        let flexibleRight = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        toolbarItems = [bookmarksItem, flexibleLeft, pageItem, flexibleRight]
+        addBookmarkItem.accessibilityLabel = L10n.addBookmark
+        shareItem.accessibilityLabel = L10n.share
+
+        let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let fixedSpace1 = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
+        fixedSpace1.width = 8
+        let fixedSpace2 = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
+        fixedSpace2.width = 8
+
+        toolbarItems = [
+            searchItem,
+            flexibleSpace,
+            bookmarksItem,
+            fixedSpace1,
+            addBookmarkItem,
+            fixedSpace2,
+            shareItem,
+            flexibleSpace,
+            pageItem
+        ]
+    }
+
+    private func configureReadingTapGesture() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(pdfTapped))
+        tap.numberOfTapsRequired = 1
+        tap.cancelsTouchesInView = false
+        tap.delegate = self
+        pdfView.addGestureRecognizer(tap)
     }
 
     private func loadDocument() {
@@ -190,6 +240,26 @@ final class PDFReaderViewController: UIViewController {
         }
     }
 
+    private func applyReadingBars(animated: Bool) {
+        navigationController?.setNavigationBarHidden(readingBarsHidden, animated: animated)
+        navigationController?.setToolbarHidden(readingBarsHidden, animated: animated)
+        setNeedsStatusBarAppearanceUpdate()
+        setNeedsUpdateOfHomeIndicatorAutoHidden()
+    }
+
+    private func presentReaderOverlay(_ controller: UIViewController, from item: UIBarButtonItem) {
+        let navigation = UINavigationController(rootViewController: controller)
+        navigation.modalPresentationStyle = .popover
+        navigation.preferredContentSize = controller.preferredContentSize
+
+        if let popover = navigation.popoverPresentationController {
+            popover.barButtonItem = item
+            popover.permittedArrowDirections = [.up, .down]
+        }
+
+        present(navigation, animated: true)
+    }
+
     @objc private func pageDidChange() {
         guard let page = pdfView.currentPage,
               let document = pdfView.document else { return }
@@ -210,10 +280,22 @@ final class PDFReaderViewController: UIViewController {
         }
     }
 
+    @objc private func pdfTapped() {
+        readingBarsHidden.toggle()
+        UIView.animate(withDuration: 0.2) { [weak self] in
+            self?.applyReadingBars(animated: true)
+        }
+    }
+
     @objc private func searchTapped() {
+        readingBarsHidden = false
+        applyReadingBars(animated: true)
+
         let search = SearchViewController(store: store, scope: .book(book.id))
         search.delegate = self
-        navigationController?.pushViewController(search, animated: true)
+        search.showsCloseButton = true
+        search.preferredContentSize = CGSize(width: 420, height: 560)
+        presentReaderOverlay(search, from: searchItem)
     }
 
     @objc private func addBookmarkTapped() {
@@ -229,9 +311,25 @@ final class PDFReaderViewController: UIViewController {
     }
 
     @objc private func bookmarksTapped() {
+        readingBarsHidden = false
+        applyReadingBars(animated: true)
+
         let bookmarks = BookmarksViewController(book: book, store: store)
         bookmarks.delegate = self
-        navigationController?.pushViewController(bookmarks, animated: true)
+        bookmarks.showsCloseButton = true
+        bookmarks.preferredContentSize = CGSize(width: 360, height: 520)
+        presentReaderOverlay(bookmarks, from: bookmarksItem)
+    }
+
+    @objc private func shareTapped() {
+        readingBarsHidden = false
+        applyReadingBars(animated: true)
+
+        let activity = UIActivityViewController(activityItems: [book.fileURL], applicationActivities: nil)
+        if let popover = activity.popoverPresentationController {
+            popover.barButtonItem = shareItem
+        }
+        present(activity, animated: true)
     }
 
     @objc private func moreTapped() {
@@ -242,7 +340,7 @@ final class PDFReaderViewController: UIViewController {
         })
         alert.addAction(UIAlertAction(title: L10n.cancel, style: .cancel))
         if let popover = alert.popoverPresentationController {
-            popover.barButtonItem = navigationItem.rightBarButtonItems?.first
+            popover.barButtonItem = navigationItem.rightBarButtonItem
         }
         present(alert, animated: true)
     }
@@ -258,16 +356,24 @@ final class PDFReaderViewController: UIViewController {
     }
 }
 
+extension PDFReaderViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        true
+    }
+}
+
 extension PDFReaderViewController: SearchViewControllerDelegate {
     func searchViewController(_ controller: SearchViewController, didSelect result: SearchResult) {
-        navigationController?.popViewController(animated: true)
-        goToPage(index: result.pageIndex, highlightQuery: controller.searchText)
+        controller.dismiss(animated: true) { [weak self] in
+            self?.goToPage(index: result.pageIndex, highlightQuery: controller.searchText)
+        }
     }
 }
 
 extension PDFReaderViewController: BookmarksViewControllerDelegate {
     func bookmarksViewController(_ controller: BookmarksViewController, didSelect bookmark: Bookmark) {
-        navigationController?.popViewController(animated: true)
-        goToPage(index: bookmark.pageIndex, highlightQuery: nil)
+        controller.dismiss(animated: true) { [weak self] in
+            self?.goToPage(index: bookmark.pageIndex, highlightQuery: nil)
+        }
     }
 }

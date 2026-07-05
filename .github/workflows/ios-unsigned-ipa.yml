@@ -9,8 +9,8 @@ on:
 jobs:
   build-unsigned-ipa:
     name: Build unsigned IPA for AltStore
-    runs-on: macos-15
-    timeout-minutes: 30
+    runs-on: macos-latest
+    timeout-minutes: 40
 
     env:
       PROJECT: TorahPDFReader.xcodeproj
@@ -29,12 +29,24 @@ jobs:
         run: |
           mkdir -p "$DERIVED_DATA" "$OUTPUT_DIR" "$LOG_DIR"
 
+      - name: Select latest installed Xcode
+        run: |
+          set -euo pipefail
+          LATEST_XCODE=$(python3 -c 'import glob, os, re; paths=glob.glob("/Applications/Xcode*.app"); print(sorted(paths, key=lambda p: [int(x) for x in re.findall(r"\d+", os.path.basename(p))] or [0])[-1] if paths else "")')
+          if [ -z "$LATEST_XCODE" ]; then
+            echo "No Xcode installation found" | tee "$LOG_DIR/xcode-select.log"
+            exit 1
+          fi
+          echo "Selecting $LATEST_XCODE" | tee "$LOG_DIR/xcode-select.log"
+          sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+
       - name: Show Xcode version
         run: |
           set -o pipefail
           {
             xcodebuild -version
             xcodebuild -showsdks
+            xcrun --sdk iphoneos --show-sdk-version
           } 2>&1 | tee "$LOG_DIR/xcode-version.log"
 
       - name: List project schemes
