@@ -1,0 +1,452 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+		75A29E53D8539252B3301E6E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B727B57B7835A5DFC5EFC475 /* AppDelegate.swift */; };
+		4CF7738A14FD73008AE0FB62 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 962457E5EF4C25A5C2511062 /* SceneDelegate.swift */; };
+		1EB475F79E29CA84434669A7 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4E65D029DC8DE34A94C8E3 /* AppCoordinator.swift */; };
+		879B9AE944A9C106418D3A31 /* EmptyStateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F0CF8F0CE75AB66701CD54 /* EmptyStateViewController.swift */; };
+		19C6CE31FB2D8E537B1BDCB3 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00DC2DA18912E1E9584F82B /* L10n.swift */; };
+		EB5AA443461A72F7E0C100AF /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51CBC8E18A8605B6F16FD45B /* Book.swift */; };
+		0BFC94263D2A668702E80CEB /* SearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 530DA5F9ABC144E1BDE6A898 /* SearchResult.swift */; };
+		93ABA96FDBE8998BEC6DB155 /* Bookmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DF02766B86D7749B98A072 /* Bookmark.swift */; };
+		DC8843FAC5963925D604D244 /* AppDirectories.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA8AD6E42F2B58079262C10 /* AppDirectories.swift */; };
+		F97AE7DCDA48999F1E3672F1 /* SQLiteDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4911D47CF0FC39317D4FF52C /* SQLiteDatabase.swift */; };
+		01AB7E4EFF4F48F595C70FD1 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA7854C5C7535F4266C0E47 /* LibraryStore.swift */; };
+		2301C96C1F47529209E216FF /* BookFileImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5F6E10F2B79E1DC1A1088B /* BookFileImporter.swift */; };
+		E3215F563FDF4C76A7DD4850 /* PDFIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DF1D9082B631BBA501B896C /* PDFIndexer.swift */; };
+		A55A42B0F4333549BC7D1C14 /* LibraryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0BD8657C86B10C285A50912 /* LibraryViewController.swift */; };
+		759FCD6538BF68DFD3A8B169 /* PDFReaderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B77A6EA4B67AE37AF91B3239 /* PDFReaderViewController.swift */; };
+		9D11C5477E2C97ABE15D3C4F /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCDF78B50632CBDA31460F1 /* SearchViewController.swift */; };
+		3876B8B73BFB327A4AE9066D /* BookmarksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381E37CCD380F66DF52B53AF /* BookmarksViewController.swift */; };
+		DC0C56A6DF75AA021B200416 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9BD454B03A4885127CD8472C /* LaunchScreen.storyboard */; };
+		3B42034B75E3F15B5B9F481C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = B4F9001FEF5406956D64F3DB /* Localizable.strings */; };
+		56B174E214E6EC0E41C209BD /* PDFKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B0AB02179416148E84F4EA81 /* PDFKit.framework */; };
+		4C29D17192B5DFE8A2FFE65D /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 92D4EB674F61AEE8C6D50656 /* UniformTypeIdentifiers.framework */; };
+		6782158C7A9D1A37411A36B1 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = FA9DDE1CA1FC146A44306AF9 /* libsqlite3.tbd */; };
+		B727B57B7835A5DFC5EFC475 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate.swift"; sourceTree = "<group>"; };
+		962457E5EF4C25A5C2511062 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SceneDelegate.swift"; sourceTree = "<group>"; };
+		2C4E65D029DC8DE34A94C8E3 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator.swift"; sourceTree = "<group>"; };
+		42F0CF8F0CE75AB66701CD54 /* EmptyStateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EmptyStateViewController.swift"; sourceTree = "<group>"; };
+		D00DC2DA18912E1E9584F82B /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "L10n.swift"; sourceTree = "<group>"; };
+		51CBC8E18A8605B6F16FD45B /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Book.swift"; sourceTree = "<group>"; };
+		530DA5F9ABC144E1BDE6A898 /* SearchResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SearchResult.swift"; sourceTree = "<group>"; };
+		C2DF02766B86D7749B98A072 /* Bookmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bookmark.swift"; sourceTree = "<group>"; };
+		CCA8AD6E42F2B58079262C10 /* AppDirectories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDirectories.swift"; sourceTree = "<group>"; };
+		4911D47CF0FC39317D4FF52C /* SQLiteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SQLiteDatabase.swift"; sourceTree = "<group>"; };
+		2FA7854C5C7535F4266C0E47 /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LibraryStore.swift"; sourceTree = "<group>"; };
+		EA5F6E10F2B79E1DC1A1088B /* BookFileImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BookFileImporter.swift"; sourceTree = "<group>"; };
+		4DF1D9082B631BBA501B896C /* PDFIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PDFIndexer.swift"; sourceTree = "<group>"; };
+		A0BD8657C86B10C285A50912 /* LibraryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LibraryViewController.swift"; sourceTree = "<group>"; };
+		B77A6EA4B67AE37AF91B3239 /* PDFReaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PDFReaderViewController.swift"; sourceTree = "<group>"; };
+		4FCDF78B50632CBDA31460F1 /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SearchViewController.swift"; sourceTree = "<group>"; };
+		381E37CCD380F66DF52B53AF /* BookmarksViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BookmarksViewController.swift"; sourceTree = "<group>"; };
+		9BD454B03A4885127CD8472C /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "LaunchScreen.storyboard"; sourceTree = "<group>"; };
+		D9C6393D6C2EE0244C1E3BAF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0EE1CC8A9AEF03DC7BE6A979 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		4821E891D9A5A61DD23F850A /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
+		02C715CD0C38104D05D81FED /* TorahPDFReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TorahPDFReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B0AB02179416148E84F4EA81 /* PDFKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PDFKit.framework; path = System/Library/Frameworks/PDFKit.framework; sourceTree = SDKROOT; };
+		92D4EB674F61AEE8C6D50656 /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
+		FA9DDE1CA1FC146A44306AF9 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.text-based-dylib-definition; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		7B8633C7EB6F5CB13673C25D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				56B174E214E6EC0E41C209BD /* PDFKit.framework in Frameworks */,
+				4C29D17192B5DFE8A2FFE65D /* UniformTypeIdentifiers.framework in Frameworks */,
+				6782158C7A9D1A37411A36B1 /* libsqlite3.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6CFC827E67DCAE34C72B9CED = {
+			isa = PBXGroup;
+			children = (
+				1DF401F405384E02A0BF02D3,
+				9911C8090D10EFAB1ED672C2,
+				D072337BD2CD1B18DAEC184E,
+				3EE27838D9A833E4662E5FE4,
+				D4ED70D4D27623DE041795FF,
+				948E5242286F8ACF1BEA0A06,
+				A8128868864D9046508D635C,
+			);
+			sourceTree = "<group>";
+		};
+		1DF401F405384E02A0BF02D3 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B727B57B7835A5DFC5EFC475,
+				962457E5EF4C25A5C2511062,
+				2C4E65D029DC8DE34A94C8E3,
+				42F0CF8F0CE75AB66701CD54,
+				D00DC2DA18912E1E9584F82B,
+			);
+			path = TorahPDFReader/App;
+			sourceTree = "<group>";
+		};
+		9911C8090D10EFAB1ED672C2 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				51CBC8E18A8605B6F16FD45B,
+				530DA5F9ABC144E1BDE6A898,
+				C2DF02766B86D7749B98A072,
+			);
+			path = TorahPDFReader/Models;
+			sourceTree = "<group>";
+		};
+		D072337BD2CD1B18DAEC184E /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				CCA8AD6E42F2B58079262C10,
+				4911D47CF0FC39317D4FF52C,
+				2FA7854C5C7535F4266C0E47,
+				EA5F6E10F2B79E1DC1A1088B,
+				4DF1D9082B631BBA501B896C,
+			);
+			path = TorahPDFReader/Services;
+			sourceTree = "<group>";
+		};
+		3EE27838D9A833E4662E5FE4 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				236EE91A68538CB284399441,
+				69E3857FB6429872F6AAE435,
+				C2B123D3E6008030BABAB761,
+				C98B6B08B6EDBF06B92C6A4E,
+			);
+			path = TorahPDFReader/Features;
+			sourceTree = "<group>";
+		};
+		236EE91A68538CB284399441 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				A0BD8657C86B10C285A50912,
+			);
+			path = Library;
+			sourceTree = "<group>";
+		};
+		69E3857FB6429872F6AAE435 /* Reader */ = {
+			isa = PBXGroup;
+			children = (
+				B77A6EA4B67AE37AF91B3239,
+			);
+			path = Reader;
+			sourceTree = "<group>";
+		};
+		C2B123D3E6008030BABAB761 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				4FCDF78B50632CBDA31460F1,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
+		C98B6B08B6EDBF06B92C6A4E /* Bookmarks */ = {
+			isa = PBXGroup;
+			children = (
+				381E37CCD380F66DF52B53AF,
+			);
+			path = Bookmarks;
+			sourceTree = "<group>";
+		};
+		D4ED70D4D27623DE041795FF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D9C6393D6C2EE0244C1E3BAF,
+				9BD454B03A4885127CD8472C,
+				B4F9001FEF5406956D64F3DB,
+			);
+			path = TorahPDFReader/Resources;
+			sourceTree = "<group>";
+		};
+		948E5242286F8ACF1BEA0A06 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B0AB02179416148E84F4EA81 /* PDFKit.framework */,
+				92D4EB674F61AEE8C6D50656 /* UniformTypeIdentifiers.framework */,
+				FA9DDE1CA1FC146A44306AF9 /* libsqlite3.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A8128868864D9046508D635C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				02C715CD0C38104D05D81FED /* TorahPDFReader.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0E8A3AD980EC179856012B7E /* TorahPDFReader */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E631DC8803DAA0784D7E8DD2 /* Build configuration list for PBXNativeTarget "TorahPDFReader" */;
+			buildPhases = (
+				E4F78730D65EE9F55E2BAC2F /* Sources */,
+				7B8633C7EB6F5CB13673C25D /* Frameworks */,
+				C52ABA055DA4D0050382EB56 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = TorahPDFReader;
+			productName = TorahPDFReader;
+			productReference = 02C715CD0C38104D05D81FED /* TorahPDFReader.app */;
+			productType = "com.apple.product-type.application";
+		};
+		98F54143AB4E86B28C3AFEE0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					0E8A3AD980EC179856012B7E = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = 45DEA8368E74E8D36B2EC1B0 /* Build configuration list for PBXProject "TorahPDFReader" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				he,
+				Base,
+			);
+			mainGroup = 6CFC827E67DCAE34C72B9CED;
+			productRefGroup = A8128868864D9046508D635C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0E8A3AD980EC179856012B7E /* TorahPDFReader */,
+			);
+		};
+		C52ABA055DA4D0050382EB56 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC0C56A6DF75AA021B200416 /* LaunchScreen.storyboard in Resources */,
+				3B42034B75E3F15B5B9F481C /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E4F78730D65EE9F55E2BAC2F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				75A29E53D8539252B3301E6E /* AppDelegate.swift in Sources */,
+				4CF7738A14FD73008AE0FB62 /* SceneDelegate.swift in Sources */,
+				1EB475F79E29CA84434669A7 /* AppCoordinator.swift in Sources */,
+				879B9AE944A9C106418D3A31 /* EmptyStateViewController.swift in Sources */,
+				19C6CE31FB2D8E537B1BDCB3 /* L10n.swift in Sources */,
+				EB5AA443461A72F7E0C100AF /* Book.swift in Sources */,
+				0BFC94263D2A668702E80CEB /* SearchResult.swift in Sources */,
+				93ABA96FDBE8998BEC6DB155 /* Bookmark.swift in Sources */,
+				DC8843FAC5963925D604D244 /* AppDirectories.swift in Sources */,
+				F97AE7DCDA48999F1E3672F1 /* SQLiteDatabase.swift in Sources */,
+				01AB7E4EFF4F48F595C70FD1 /* LibraryStore.swift in Sources */,
+				2301C96C1F47529209E216FF /* BookFileImporter.swift in Sources */,
+				E3215F563FDF4C76A7DD4850 /* PDFIndexer.swift in Sources */,
+				A55A42B0F4333549BC7D1C14 /* LibraryViewController.swift in Sources */,
+				759FCD6538BF68DFD3A8B169 /* PDFReaderViewController.swift in Sources */,
+				9D11C5477E2C97ABE15D3C4F /* SearchViewController.swift in Sources */,
+				3876B8B73BFB327A4AE9066D /* BookmarksViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4F9001FEF5406956D64F3DB /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0EE1CC8A9AEF03DC7BE6A979 /* en */,
+				4821E891D9A5A61DD23F850A /* he */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		58B22D68371AC8F11EADCD99 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)");
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		D005BFB4C42D9F64610280D7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				
+				SDKROOT = iphoneos;
+				
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		96F032C02E8A3FC1B0365FA6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TorahPDFReader/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Torah PDF Reader";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.TorahPDFReader;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5BDD486E465E20A146951F86 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TorahPDFReader/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Torah PDF Reader";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.TorahPDFReader;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		45DEA8368E74E8D36B2EC1B0 /* Build configuration list for PBXProject "TorahPDFReader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58B22D68371AC8F11EADCD99 /* Debug */,
+				D005BFB4C42D9F64610280D7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E631DC8803DAA0784D7E8DD2 /* Build configuration list for PBXNativeTarget "TorahPDFReader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				96F032C02E8A3FC1B0365FA6 /* Debug */,
+				5BDD486E465E20A146951F86 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+	};
+	rootObject = 98F54143AB4E86B28C3AFEE0 /* Project object */;
+}
