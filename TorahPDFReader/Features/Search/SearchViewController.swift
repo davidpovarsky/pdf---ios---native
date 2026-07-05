@@ -27,15 +27,17 @@ final class SearchViewController: UITableViewController {
     private var pendingSearch: DispatchWorkItem?
     private let emptyLabel = UILabel()
     private var isRestoringSession = false
+    private var suppressSearchUpdates = false
     private var hasRestoredContentOffset = false
     var showsCloseButton = false
 
     var searchText: String {
-        searchController.searchBar.text ?? session.query
+        currentQuery
     }
 
     var currentQuery: String {
-        searchText
+        let liveText = searchController.searchBar.text ?? ""
+        return liveText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? session.query : liveText
     }
 
     var searchScope: SearchScope {
@@ -91,8 +93,10 @@ final class SearchViewController: UITableViewController {
         let selectedResult = results[indexPath.row]
         let query = currentQuery
         session.query = query
+        session.results = results
         session.contentOffset = tableView.contentOffset
 
+        suppressSearchUpdates = true
         searchController.searchBar.resignFirstResponder()
         searchController.isActive = false
 
@@ -225,6 +229,7 @@ final class SearchViewController: UITableViewController {
 extension SearchViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         guard !isRestoringSession else { return }
+        guard !suppressSearchUpdates else { return }
         let query = searchController.searchBar.text ?? ""
         session.query = query
         runSearch(query: query)
