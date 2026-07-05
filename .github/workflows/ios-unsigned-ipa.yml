@@ -17,21 +17,30 @@ jobs:
       SCHEME: TorahPDFReader
       CONFIGURATION: Release
       BUNDLE_ID: com.davidpovarsky.TorahPDFReader
-      DERIVED_DATA: ${{ runner.temp }}/DerivedData
-      OUTPUT_DIR: ${{ runner.temp }}/ipa-output
+      DERIVED_DATA: build/DerivedData
+      OUTPUT_DIR: build/ipa-output
+      LOG_DIR: build/logs
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare build folders
+        run: |
+          mkdir -p "$DERIVED_DATA" "$OUTPUT_DIR" "$LOG_DIR"
+
       - name: Show Xcode version
         run: |
-          xcodebuild -version
-          xcodebuild -showsdks
+          set -o pipefail
+          {
+            xcodebuild -version
+            xcodebuild -showsdks
+          } 2>&1 | tee "$LOG_DIR/xcode-version.log"
 
       - name: List project schemes
         run: |
-          xcodebuild -project "$PROJECT" -list
+          set -o pipefail
+          xcodebuild -project "$PROJECT" -list 2>&1 | tee "$LOG_DIR/project-list.log"
 
       - name: Build unsigned app
         run: |
@@ -48,7 +57,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            DEVELOPMENT_TEAM=""
+            DEVELOPMENT_TEAM="" \
+            2>&1 | tee "$LOG_DIR/xcodebuild.log"
 
       - name: Package unsigned IPA
         run: |
@@ -57,22 +67,33 @@ jobs:
           APP_PATH=$(find "$DERIVED_DATA/Build/Products/${CONFIGURATION}-iphoneos" -maxdepth 1 -name "*.app" -print -quit)
 
           if [ -z "$APP_PATH" ]; then
-            echo "No .app found"
-            find "$DERIVED_DATA/Build/Products" -maxdepth 3 -print
+            echo "No .app found" | tee "$LOG_DIR/package.log"
+            find "$DERIVED_DATA/Build/Products" -maxdepth 5 -print 2>&1 | tee -a "$LOG_DIR/package.log"
             exit 1
           fi
 
+          echo "Found app at: $APP_PATH" | tee "$LOG_DIR/package.log"
+
+          rm -rf "$OUTPUT_DIR/Payload"
           mkdir -p "$OUTPUT_DIR/Payload"
           cp -R "$APP_PATH" "$OUTPUT_DIR/Payload/"
 
           cd "$OUTPUT_DIR"
           /usr/bin/zip -qry "TorahPDFReader-unsigned.ipa" Payload
 
-          ls -la "$OUTPUT_DIR"
+          ls -la "$GITHUB_WORKSPACE/$OUTPUT_DIR" 2>&1 | tee -a "$GITHUB_WORKSPACE/$LOG_DIR/package.log"
 
       - name: Upload unsigned IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: TorahPDFReader-unsigned-IPA
-          path: ${{ runner.temp }}/ipa-output/TorahPDFReader-unsigned.ipa
+          path: build/ipa-output/TorahPDFReader-unsigned.ipa
           if-no-files-found: error
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TorahPDFReader-build-logs
+          path: build/logs
+          if-no-files-found: warn
