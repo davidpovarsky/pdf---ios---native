@@ -10,7 +10,7 @@ final class PDFReaderViewController: UIViewController {
     private var currentPageIndex: Int = 0
     private let initialPageIndex: Int?
     private let initialHighlightQuery: String?
-    private let searchSession = SearchSession()
+    private let inBookSearchSession = SearchSession()
     private var readingBarsHidden = false
 
     private lazy var searchItem = UIBarButtonItem(
@@ -279,7 +279,7 @@ final class PDFReaderViewController: UIViewController {
         readingBarsHidden = false
         applyReadingBars(animated: true)
 
-        let search = SearchViewController(store: store, scope: .book(book.id), session: searchSession)
+        let search = SearchViewController(store: store, scope: .book(book.id), session: inBookSearchSession)
         search.delegate = self
         search.showsCloseButton = true
         search.preferredContentSize = CGSize(width: 420, height: 560)
@@ -351,9 +351,8 @@ extension PDFReaderViewController: UIGestureRecognizerDelegate {
 }
 
 extension PDFReaderViewController: SearchViewControllerDelegate {
-    func searchViewController(_ controller: SearchViewController, didSelect result: SearchResult) {
-        let query = controller.searchText
-        controller.dismiss(animated: true) { [weak self] in
+    func searchViewController(_ controller: SearchViewController, didSelect result: SearchResult, query: String) {
+        controller.navigationController?.dismiss(animated: true) { [weak self] in
             self?.goToPage(index: result.pageIndex, highlightQuery: query)
         }
     }

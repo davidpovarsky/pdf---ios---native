@@ -1,7 +1,7 @@
 import UIKit
 
 protocol SearchViewControllerDelegate: AnyObject {
-    func searchViewController(_ controller: SearchViewController, didSelect result: SearchResult)
+    func searchViewController(_ controller: SearchViewController, didSelect result: SearchResult, query: String)
 }
 
 final class SearchSession {
@@ -34,6 +34,14 @@ final class SearchViewController: UITableViewController {
         searchController.searchBar.text ?? session.query
     }
 
+    var currentQuery: String {
+        searchText
+    }
+
+    var searchScope: SearchScope {
+        scope
+    }
+
     init(store: LibraryStore, scope: SearchScope, session: SearchSession = SearchSession()) {
         self.store = store
         self.scope = scope
@@ -54,6 +62,7 @@ final class SearchViewController: UITableViewController {
         configureCloseButtonIfNeeded()
         restoreSession()
         searchController.searchResultsUpdater = self
+        rerunRestoredSearchIfNeeded()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -79,8 +88,16 @@ final class SearchViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let selectedResult = results[indexPath.row]
+        let query = currentQuery
+        session.query = query
+        session.contentOffset = tableView.contentOffset
+
+        searchController.searchBar.resignFirstResponder()
+        searchController.isActive = false
+
         tableView.deselectRow(at: indexPath, animated: true)
-        delegate?.searchViewController(self, didSelect: results[indexPath.row])
+        delegate?.searchViewController(self, didSelect: selectedResult, query: query)
     }
 
     override func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -103,7 +120,7 @@ final class SearchViewController: UITableViewController {
     }
 
     @objc private func closeTapped() {
-        dismiss(animated: true)
+        navigationController?.dismiss(animated: true)
     }
 
     private func configureSearchController() {
@@ -137,6 +154,12 @@ final class SearchViewController: UITableViewController {
             self.tableView.setContentOffset(self.session.contentOffset, animated: false)
             self.hasRestoredContentOffset = true
         }
+    }
+
+    private func rerunRestoredSearchIfNeeded() {
+        guard !session.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              session.results.isEmpty else { return }
+        runSearch(query: session.query)
     }
 
     private func runSearch(query: String) {
