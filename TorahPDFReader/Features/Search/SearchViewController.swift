@@ -4,24 +4,40 @@ protocol SearchViewControllerDelegate: AnyObject {
     func searchViewController(_ controller: SearchViewController, didSelect result: SearchResult)
 }
 
+final class SearchSession {
+    var query: String
+    var results: [SearchResult]
+    var contentOffset: CGPoint
+
+    init(query: String = "", results: [SearchResult] = [], contentOffset: CGPoint = .zero) {
+        self.query = query
+        self.results = results
+        self.contentOffset = contentOffset
+    }
+}
+
 final class SearchViewController: UITableViewController {
     weak var delegate: SearchViewControllerDelegate?
 
     private let store: LibraryStore
     private let scope: SearchScope
+    private let session: SearchSession
     private let searchController = UISearchController(searchResultsController: nil)
     private var results: [SearchResult] = []
     private var pendingSearch: DispatchWorkItem?
     private let emptyLabel = UILabel()
+    private var isRestoringSession = false
+    private var hasRestoredContentOffset = false
     var showsCloseButton = false
 
     var searchText: String {
-        searchController.searchBar.text ?? ""
+        searchController.searchBar.text ?? session.query
     }
 
-    init(store: LibraryStore, scope: SearchScope) {
+    init(store: LibraryStore, scope: SearchScope, session: SearchSession = SearchSession()) {
         self.store = store
         self.scope = scope
+        self.session = session
         super.init(style: .insetGrouped)
     }
 
@@ -36,7 +52,8 @@ final class SearchViewController: UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "SearchResultCell")
         configureSearchController()
         configureCloseButtonIfNeeded()
-        configureEmptyState(text: L10n.queryPlaceholder)
+        restoreSession()
+        searchController.searchResultsUpdater = self
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -66,6 +83,16 @@ final class SearchViewController: UITableViewController {
         delegate?.searchViewController(self, didSelect: results[indexPath.row])
     }
 
+    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard hasRestoredContentOffset else { return }
+        session.contentOffset = scrollView.contentOffset
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        session.contentOffset = tableView.contentOffset
+    }
+
     private func configureCloseButtonIfNeeded() {
         guard showsCloseButton else { return }
         navigationItem.leftBarButtonItem = UIBarButtonItem(
@@ -80,7 +107,6 @@ final class SearchViewController: UITableViewController {
     }
 
     private func configureSearchController() {
-        searchController.searchResultsUpdater = self
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = L10n.search
         navigationItem.searchController = searchController
@@ -97,15 +123,34 @@ final class SearchViewController: UITableViewController {
         tableView.backgroundView?.isHidden = !results.isEmpty
     }
 
+    private func restoreSession() {
+        isRestoringSession = true
+        searchController.searchBar.text = session.query
+        isRestoringSession = false
+
+        results = session.results
+        tableView.reloadData()
+        configureEmptyState(text: emptyStateText(for: session.query, results: results))
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.tableView.setContentOffset(self.session.contentOffset, animated: false)
+            self.hasRestoredContentOffset = true
+        }
+    }
+
     private func runSearch(query: String) {
         pendingSearch?.cancel()
         let cleaned = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleaned.isEmpty else {
             results = []
+            session.results = []
+            session.contentOffset = .zero
             tableView.reloadData()
             configureEmptyState(text: L10n.queryPlaceholder)
             return
         }
+        session.contentOffset = .zero
 
         var workItem: DispatchWorkItem?
         workItem = DispatchWorkItem { [weak self] in
@@ -115,6 +160,7 @@ final class SearchViewController: UITableViewController {
                 DispatchQueue.main.async {
                     guard workItem?.isCancelled == false else { return }
                     self.results = found
+                    self.session.results = found
                     self.tableView.reloadData()
                     self.configureEmptyState(text: found.isEmpty ? L10n.noResults : "")
                 }
@@ -138,6 +184,14 @@ final class SearchViewController: UITableViewController {
         }
     }
 
+    private func emptyStateText(for query: String, results: [SearchResult]) -> String {
+        let cleaned = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if cleaned.isEmpty {
+            return L10n.queryPlaceholder
+        }
+        return results.isEmpty ? L10n.noResults : ""
+    }
+
     private func showError(_ error: Error) {
         let alert = UIAlertController(title: L10n.error, message: error.localizedDescription, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: L10n.ok, style: .default))
@@ -147,6 +201,9 @@ final class SearchViewController: UITableViewController {
 
 extension SearchViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
-        runSearch(query: searchController.searchBar.text ?? "")
+        guard !isRestoringSession else { return }
+        let query = searchController.searchBar.text ?? ""
+        session.query = query
+        runSearch(query: query)
     }
 }

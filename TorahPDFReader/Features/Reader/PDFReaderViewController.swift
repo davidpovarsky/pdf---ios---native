@@ -10,6 +10,7 @@ final class PDFReaderViewController: UIViewController {
     private var currentPageIndex: Int = 0
     private let initialPageIndex: Int?
     private let initialHighlightQuery: String?
+    private let searchSession = SearchSession()
     private var readingBarsHidden = false
 
     private lazy var searchItem = UIBarButtonItem(
@@ -37,6 +38,13 @@ final class PDFReaderViewController: UIViewController {
         barButtonSystemItem: .action,
         target: self,
         action: #selector(shareTapped)
+    )
+
+    private lazy var moreItem = UIBarButtonItem(
+        image: UIImage(systemName: "ellipsis.circle"),
+        style: .plain,
+        target: self,
+        action: #selector(moreTapped)
     )
 
     init(
@@ -92,7 +100,6 @@ final class PDFReaderViewController: UIViewController {
         title = book.title
         navigationItem.largeTitleDisplayMode = .never
         configureNavigationItems()
-        configureToolbar()
         configureReadingTapGesture()
         loadDocument()
         observePageChanges()
@@ -116,46 +123,27 @@ final class PDFReaderViewController: UIViewController {
     }
 
     private func configureNavigationItems() {
-        let moreButton = UIBarButtonItem(
-            image: UIImage(systemName: "ellipsis.circle"),
-            style: .plain,
-            target: self,
-            action: #selector(moreTapped)
-        )
-        moreButton.accessibilityLabel = L10n.more
-        navigationItem.rightBarButtonItem = moreButton
-    }
-
-    private func configureToolbar() {
         pageLabel.font = .preferredFont(forTextStyle: .footnote)
         pageLabel.textColor = .secondaryLabel
         pageLabel.textAlignment = .center
         pageLabel.adjustsFontForContentSizeCategory = true
 
-        let pageItem = UIBarButtonItem(customView: pageLabel)
-        pageItem.accessibilityLabel = L10n.page
-
         searchItem.accessibilityLabel = L10n.searchThisBook
         bookmarksItem.accessibilityLabel = L10n.bookmarks
         addBookmarkItem.accessibilityLabel = L10n.addBookmark
         shareItem.accessibilityLabel = L10n.share
+        moreItem.accessibilityLabel = L10n.more
 
-        let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        let fixedSpace1 = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
-        fixedSpace1.width = 8
-        let fixedSpace2 = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
-        fixedSpace2.width = 8
+        let pageItem = UIBarButtonItem(customView: pageLabel)
+        pageItem.accessibilityLabel = L10n.page
 
-        toolbarItems = [
-            searchItem,
-            flexibleSpace,
-            bookmarksItem,
-            fixedSpace1,
-            addBookmarkItem,
-            fixedSpace2,
+        navigationItem.leftBarButtonItem = pageItem
+        navigationItem.rightBarButtonItems = [
+            moreItem,
             shareItem,
-            flexibleSpace,
-            pageItem
+            addBookmarkItem,
+            bookmarksItem,
+            searchItem,
         ]
     }
 
@@ -242,7 +230,7 @@ final class PDFReaderViewController: UIViewController {
 
     private func applyReadingBars(animated: Bool) {
         navigationController?.setNavigationBarHidden(readingBarsHidden, animated: animated)
-        navigationController?.setToolbarHidden(readingBarsHidden, animated: animated)
+        navigationController?.setToolbarHidden(true, animated: animated)
         setNeedsStatusBarAppearanceUpdate()
         setNeedsUpdateOfHomeIndicatorAutoHidden()
     }
@@ -291,7 +279,7 @@ final class PDFReaderViewController: UIViewController {
         readingBarsHidden = false
         applyReadingBars(animated: true)
 
-        let search = SearchViewController(store: store, scope: .book(book.id))
+        let search = SearchViewController(store: store, scope: .book(book.id), session: searchSession)
         search.delegate = self
         search.showsCloseButton = true
         search.preferredContentSize = CGSize(width: 420, height: 560)
@@ -340,7 +328,7 @@ final class PDFReaderViewController: UIViewController {
         })
         alert.addAction(UIAlertAction(title: L10n.cancel, style: .cancel))
         if let popover = alert.popoverPresentationController {
-            popover.barButtonItem = navigationItem.rightBarButtonItem
+            popover.barButtonItem = moreItem
         }
         present(alert, animated: true)
     }
@@ -364,8 +352,9 @@ extension PDFReaderViewController: UIGestureRecognizerDelegate {
 
 extension PDFReaderViewController: SearchViewControllerDelegate {
     func searchViewController(_ controller: SearchViewController, didSelect result: SearchResult) {
+        let query = controller.searchText
         controller.dismiss(animated: true) { [weak self] in
-            self?.goToPage(index: result.pageIndex, highlightQuery: controller.searchText)
+            self?.goToPage(index: result.pageIndex, highlightQuery: query)
         }
     }
 }

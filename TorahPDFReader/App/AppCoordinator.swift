@@ -9,6 +9,7 @@ final class AppCoordinator: NSObject {
     private let libraryViewController: LibraryViewController
     private let primaryNavigationController: UINavigationController
     private let secondaryNavigationController: UINavigationController
+    private let globalSearchSession = SearchSession()
 
     init(window: UIWindow) {
         self.window = window
@@ -97,7 +98,7 @@ extension AppCoordinator: LibraryViewControllerDelegate {
     }
 
     func libraryViewControllerDidRequestGlobalSearch(_ controller: LibraryViewController) {
-        let search = SearchViewController(store: store, scope: .allBooks)
+        let search = SearchViewController(store: store, scope: .allBooks, session: globalSearchSession)
         search.delegate = self
         controller.navigationController?.pushViewController(search, animated: true)
     }
@@ -107,8 +108,9 @@ extension AppCoordinator: SearchViewControllerDelegate {
     func searchViewController(_ controller: SearchViewController, didSelect result: SearchResult) {
         do {
             guard let book = try store.book(id: result.bookID) else { return }
+            let query = controller.searchText
             controller.navigationController?.popViewController(animated: true)
-            open(book: book, initialPageIndex: result.pageIndex, highlightQuery: controller.searchText)
+            open(book: book, initialPageIndex: result.pageIndex, highlightQuery: query)
         } catch {
             presentError(error)
         }
