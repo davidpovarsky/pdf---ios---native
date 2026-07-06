@@ -24,6 +24,7 @@
 "delete" = "מחיקה";
 "cancel" = "ביטול";
 "ok" = "אישור";
+"done" = "סיום";
 "error" = "שגיאה";
 "unsupported_file" = "קובץ לא נתמך";
 "open" = "פתיחה";
@@ -37,3 +38,8 @@
 
 "share" = "שיתוף";
 "more" = "עוד";
+"file_contents" = "תוכן הקובץ";
+"table_of_contents" = "תוכן עניינים";
+"page_thumbnails" = "עמודים";
+"no_table_of_contents" = "לקובץ זה אין תוכן עניינים פנימי.";
+"jump_to_page" = "מעבר לעמוד";
