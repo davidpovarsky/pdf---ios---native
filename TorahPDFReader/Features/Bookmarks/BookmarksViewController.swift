@@ -1,22 +1,24 @@
+import SwiftUI
 import UIKit
 
 protocol BookmarksViewControllerDelegate: AnyObject {
     func bookmarksViewController(_ controller: BookmarksViewController, didSelect bookmark: Bookmark)
 }
 
-final class BookmarksViewController: UITableViewController {
+final class BookmarksViewController: UIHostingController<BookmarksView> {
     weak var delegate: BookmarksViewControllerDelegate?
 
-    private let book: Book
-    private let store: LibraryStore
-    private var bookmarks: [Bookmark] = []
-    private let emptyLabel = UILabel()
-    var showsCloseButton = false
+    private let viewModel: BookmarksViewModel
+    var showsCloseButton = false {
+        didSet {
+            updateRootView()
+        }
+    }
 
     init(book: Book, store: LibraryStore) {
-        self.book = book
-        self.store = store
-        super.init(style: .insetGrouped)
+        self.viewModel = BookmarksViewModel(book: book, store: store)
+        super.init(rootView: BookmarksView(viewModel: viewModel))
+        updateRootView()
     }
 
     required init?(coder: NSCoder) {
@@ -26,84 +28,120 @@ final class BookmarksViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = L10n.bookmarks
-        configureCloseButtonIfNeeded()
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "BookmarkCell")
-        configureEmptyState()
-        reloadBookmarks()
+        viewModel.reload()
     }
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        bookmarks.count
-    }
-
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "BookmarkCell")
-        let bookmark = bookmarks[indexPath.row]
-        cell.textLabel?.text = bookmark.title
-        cell.detailTextLabel?.text = L10n.pageNumber(bookmark.pageNumber)
-        cell.imageView?.image = UIImage(systemName: "bookmark")
-        cell.accessoryType = .disclosureIndicator
-        return cell
-    }
-
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        delegate?.bookmarksViewController(self, didSelect: bookmarks[indexPath.row])
-    }
-
-    override func tableView(
-        _ tableView: UITableView,
-        trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
-    ) -> UISwipeActionsConfiguration? {
-        let bookmark = bookmarks[indexPath.row]
-        let deleteAction = UIContextualAction(style: .destructive, title: L10n.delete) { [weak self] _, _, completion in
-            guard let self else { completion(false); return }
-            do {
-                try self.store.removeBookmark(bookID: self.book.id, pageIndex: bookmark.pageIndex)
-                self.reloadBookmarks()
-                completion(true)
-            } catch {
-                self.showError(error)
-                completion(false)
+    private func updateRootView() {
+        rootView = BookmarksView(
+            viewModel: viewModel,
+            showsCloseButton: showsCloseButton,
+            onClose: { [weak self] in
+                self?.dismiss(animated: true)
+            },
+            onSelect: { [weak self] bookmark in
+                guard let self else { return }
+                self.delegate?.bookmarksViewController(self, didSelect: bookmark)
             }
-        }
-        return UISwipeActionsConfiguration(actions: [deleteAction])
-    }
-
-    private func configureCloseButtonIfNeeded() {
-        guard showsCloseButton else { return }
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .close,
-            target: self,
-            action: #selector(closeTapped)
         )
     }
+}
 
-    @objc private func closeTapped() {
-        dismiss(animated: true)
+final class BookmarksViewModel: ObservableObject {
+    @Published var bookmarks: [Bookmark] = []
+    @Published var errorMessage: String?
+
+    private let book: Book
+    private let store: LibraryStore
+
+    init(book: Book, store: LibraryStore) {
+        self.book = book
+        self.store = store
     }
 
-    private func reloadBookmarks() {
+    func reload() {
         do {
             bookmarks = try store.bookmarks(bookID: book.id)
-            tableView.reloadData()
-            tableView.backgroundView?.isHidden = !bookmarks.isEmpty
         } catch {
-            showError(error)
+            errorMessage = error.localizedDescription
         }
     }
 
-    private func configureEmptyState() {
-        emptyLabel.text = L10n.noBookmarks
-        emptyLabel.textColor = .secondaryLabel
-        emptyLabel.textAlignment = .center
-        emptyLabel.numberOfLines = 0
-        tableView.backgroundView = emptyLabel
+    func delete(_ bookmark: Bookmark) {
+        do {
+            try store.removeBookmark(bookID: book.id, pageIndex: bookmark.pageIndex)
+            reload()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
+}
 
-    private func showError(_ error: Error) {
-        let alert = UIAlertController(title: L10n.error, message: error.localizedDescription, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: L10n.ok, style: .default))
-        present(alert, animated: true)
+struct BookmarksView: View {
+    @ObservedObject var viewModel: BookmarksViewModel
+    var showsCloseButton = false
+    var onClose: () -> Void = {}
+    var onSelect: (Bookmark) -> Void = { _ in }
+
+    var body: some View {
+        List(viewModel.bookmarks) { bookmark in
+            Button {
+                onSelect(bookmark)
+            } label: {
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(bookmark.title)
+                        Text(L10n.pageNumber(bookmark.pageNumber))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "bookmark")
+                }
+            }
+            .buttonStyle(.plain)
+            .swipeActions {
+                Button(role: .destructive) {
+                    viewModel.delete(bookmark)
+                } label: {
+                    Label(L10n.delete, systemImage: "trash")
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .overlay {
+            if viewModel.bookmarks.isEmpty {
+                Text(L10n.noBookmarks)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            }
+        }
+        .navigationTitle(L10n.bookmarks)
+        .toolbar {
+            if showsCloseButton {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        onClose()
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                    .accessibilityLabel(L10n.cancel)
+                }
+            }
+        }
+        .alert(L10n.error, isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.errorMessage = nil
+                }
+            }
+        )) {
+            Button(L10n.ok, role: .cancel) {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 }
