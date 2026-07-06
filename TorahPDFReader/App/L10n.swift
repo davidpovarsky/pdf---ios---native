@@ -27,6 +27,7 @@ enum L10n {
     static let delete = text("delete")
     static let cancel = text("cancel")
     static let ok = text("ok")
+    static let done = text("done")
     static let error = text("error")
     static let unsupportedFile = text("unsupported_file")
     static let open = text("open")
@@ -37,6 +38,11 @@ enum L10n {
     static let indexingStarted = text("indexing_started")
     static let queryPlaceholder = text("query_placeholder")
     static let copiedIntoLibrary = text("copied_into_library")
+    static let fileContents = text("file_contents")
+    static let tableOfContents = text("table_of_contents")
+    static let pageThumbnails = text("page_thumbnails")
+    static let noTableOfContents = text("no_table_of_contents")
+    static let jumpToPage = text("jump_to_page")
 
     static func pageNumber(_ number: Int) -> String {
         String(format: text("page_number_format"), number)
