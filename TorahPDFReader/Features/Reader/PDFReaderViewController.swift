@@ -9,6 +9,7 @@ final class PDFReaderViewController: UIViewController {
     private let pageLabel = UILabel()
     private let pageScrubber = PDFPageScrubberView()
     private var scrubberHideWorkItem: DispatchWorkItem?
+    private var isScrubberInteracting = false
     private var currentPageIndex: Int = 0
     private let initialPageIndex: Int?
     private let initialHighlightQuery: String?
@@ -82,6 +83,19 @@ final class PDFReaderViewController: UIViewController {
         readingBarsHidden
     }
 
+    override var canBecomeFirstResponder: Bool {
+        true
+    }
+
+    override var keyCommands: [UIKeyCommand]? {
+        [
+            UIKeyCommand(input: UIKeyCommand.inputLeftArrow, modifierFlags: [], action: #selector(previousPageKeyPressed)),
+            UIKeyCommand(input: UIKeyCommand.inputUpArrow, modifierFlags: [], action: #selector(previousPageKeyPressed)),
+            UIKeyCommand(input: UIKeyCommand.inputRightArrow, modifierFlags: [], action: #selector(nextPageKeyPressed)),
+            UIKeyCommand(input: UIKeyCommand.inputDownArrow, modifierFlags: [], action: #selector(nextPageKeyPressed))
+        ]
+    }
+
     override func loadView() {
         view = UIView()
         view.backgroundColor = .systemBackground
@@ -130,10 +144,12 @@ final class PDFReaderViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         applyReadingBars(animated: animated)
+        becomeFirstResponder()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        resignFirstResponder()
         readingBarsHidden = false
         navigationController?.setNavigationBarHidden(false, animated: animated)
         navigationController?.setToolbarHidden(true, animated: animated)
@@ -216,7 +232,7 @@ final class PDFReaderViewController: UIViewController {
         )
     }
 
-    private func goToPage(index: Int, highlightQuery: String?) {
+    private func goToPage(index: Int, highlightQuery: String?, updateScrubber: Bool = true) {
         guard let document = pdfView.document,
               index >= 0,
               index < document.pageCount,
@@ -224,7 +240,9 @@ final class PDFReaderViewController: UIViewController {
         pdfView.go(to: page)
         currentPageIndex = index
         updatePageLabel()
-        pageScrubber.updateCurrentPage(index)
+        if updateScrubber {
+            pageScrubber.updateCurrentPage(index)
+        }
         showPageScrubberTemporarily()
         if let highlightQuery, !highlightQuery.isEmpty {
             highlight(query: highlightQuery, on: page)
@@ -305,6 +323,7 @@ final class PDFReaderViewController: UIViewController {
             self.pageScrubber.alpha = 1
         }
 
+        guard !isScrubberInteracting else { return }
         let workItem = DispatchWorkItem { [weak self] in
             self?.hidePageScrubber(animated: true)
         }
@@ -313,6 +332,7 @@ final class PDFReaderViewController: UIViewController {
     }
 
     private func hidePageScrubber(animated: Bool) {
+        guard !isScrubberInteracting else { return }
         scrubberHideWorkItem?.cancel()
         let changes: () -> Void = { [weak self] in
             guard let self else { return }
@@ -335,7 +355,9 @@ final class PDFReaderViewController: UIViewController {
               let document = pdfView.document else { return }
         currentPageIndex = document.index(for: page)
         updatePageLabel()
-        pageScrubber.updateCurrentPage(currentPageIndex)
+        if !isScrubberInteracting {
+            pageScrubber.updateCurrentPage(currentPageIndex)
+        }
         showPageScrubberTemporarily()
         saveCurrentPage()
     }
@@ -397,15 +419,33 @@ final class PDFReaderViewController: UIViewController {
 
     @objc private func addBookmarkTapped() {
         do {
-            let title = L10n.pageNumber(currentPageIndex + 1)
-            try store.addBookmark(bookID: book.id, pageIndex: currentPageIndex, title: title)
+            let isBookmarked = try store.isBookmarked(bookID: book.id, pageIndex: currentPageIndex)
+            if isBookmarked {
+                try store.removeBookmark(bookID: book.id, pageIndex: currentPageIndex)
+            } else {
+                let title = L10n.pageNumber(currentPageIndex + 1)
+                try store.addBookmark(bookID: book.id, pageIndex: currentPageIndex, title: title)
+            }
             updateBookmarkButtonState()
-            let alert = UIAlertController(title: L10n.bookmark, message: L10n.addBookmark, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: L10n.ok, style: .default))
-            present(alert, animated: true)
         } catch {
             showError(error)
         }
+    }
+
+    @objc private func previousPageKeyPressed() {
+        goToAdjacentPage(offset: -1)
+    }
+
+    @objc private func nextPageKeyPressed() {
+        goToAdjacentPage(offset: 1)
+    }
+
+    private func goToAdjacentPage(offset: Int) {
+        guard let document = pdfView.document else { return }
+        let pageIndex = min(max(currentPageIndex + offset, 0), max(document.pageCount - 1, 0))
+        guard pageIndex != currentPageIndex else { return }
+        goToPage(index: pageIndex, highlightQuery: nil)
+        saveCurrentPage()
     }
 
     @objc private func shareTapped() {
@@ -514,6 +554,19 @@ extension PDFReaderViewController: PDFPageScrubberViewDelegate {
         goToPage(index: pageIndex, highlightQuery: nil)
         showPageScrubberTemporarily()
     }
+
+    fileprivate func pageScrubberViewDidBeginInteraction(_ scrubber: PDFPageScrubberView) {
+        isScrubberInteracting = true
+        scrubberHideWorkItem?.cancel()
+        pageScrubber.isHidden = false
+        pageScrubber.alpha = 1
+    }
+
+    fileprivate func pageScrubberViewDidEndInteraction(_ scrubber: PDFPageScrubberView) {
+        isScrubberInteracting = false
+        showPageScrubberTemporarily()
+    }
+
 }
 
 extension PDFReaderViewController: PDFPageJumpViewControllerDelegate {
@@ -892,6 +945,8 @@ fileprivate final class PDFPageThumbnailCell: UICollectionViewCell {
 
 fileprivate protocol PDFPageScrubberViewDelegate: AnyObject {
     func pageScrubberView(_ scrubber: PDFPageScrubberView, didSelectPageAt pageIndex: Int)
+    func pageScrubberViewDidBeginInteraction(_ scrubber: PDFPageScrubberView)
+    func pageScrubberViewDidEndInteraction(_ scrubber: PDFPageScrubberView)
 }
 
 fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
@@ -903,6 +958,7 @@ fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource,
     private let collectionView: UICollectionView
     private var document: PDFDocument?
     private var currentPageIndex: Int = 0
+    private var isUserDragging = false
 
     override init(frame: CGRect) {
         let layout = UICollectionViewFlowLayout()
@@ -949,7 +1005,34 @@ fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource,
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        currentPageIndex = indexPath.item
         delegate?.pageScrubberView(self, didSelectPageAt: indexPath.item)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, didHighlightItemAt indexPath: IndexPath) {
+        delegate?.pageScrubberViewDidBeginInteraction(self)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, didUnhighlightItemAt indexPath: IndexPath) {
+        guard !isUserDragging else { return }
+        delegate?.pageScrubberViewDidEndInteraction(self)
+    }
+
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        isUserDragging = true
+        delegate?.pageScrubberViewDidBeginInteraction(self)
+    }
+
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if !decelerate {
+            isUserDragging = false
+            delegate?.pageScrubberViewDidEndInteraction(self)
+        }
+    }
+
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        isUserDragging = false
+        delegate?.pageScrubberViewDidEndInteraction(self)
     }
 
     func collectionView(
@@ -993,6 +1076,7 @@ fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource,
             collectionView.bottomAnchor.constraint(equalTo: blurView.contentView.bottomAnchor)
         ])
     }
+
 }
 
 fileprivate final class PDFScrubberThumbnailCell: UICollectionViewCell {
