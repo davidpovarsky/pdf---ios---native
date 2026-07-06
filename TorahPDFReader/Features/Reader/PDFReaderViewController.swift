@@ -10,7 +10,6 @@ final class PDFReaderViewController: UIViewController {
     private let pageScrubber = PDFPageScrubberView()
     private var scrubberHideWorkItem: DispatchWorkItem?
     private var isScrubberInteracting = false
-    private var activeSearchHighlightAnnotations: [(page: PDFPage, annotation: PDFAnnotation)] = []
     private var currentPageIndex: Int = 0
     private let initialPageIndex: Int?
     private let initialHighlightQuery: String?
@@ -158,7 +157,6 @@ final class PDFReaderViewController: UIViewController {
 
     deinit {
         scrubberHideWorkItem?.cancel()
-        clearActiveSearchHighlight()
         NotificationCenter.default.removeObserver(self)
     }
 
@@ -196,12 +194,6 @@ final class PDFReaderViewController: UIViewController {
     }
 
     private func configureReadingTapGesture() {
-        let touch = UILongPressGestureRecognizer(target: self, action: #selector(pdfTouched(_:)))
-        touch.minimumPressDuration = 0
-        touch.cancelsTouchesInView = false
-        touch.delegate = self
-        pdfView.addGestureRecognizer(touch)
-
         let tap = UITapGestureRecognizer(target: self, action: #selector(pdfTapped))
         tap.numberOfTapsRequired = 1
         tap.cancelsTouchesInView = false
@@ -264,31 +256,9 @@ final class PDFReaderViewController: UIViewController {
             let selection = selections.first { $0.pages.contains(page) }
             DispatchQueue.main.async { [weak self] in
                 guard let self, let selection else { return }
-                self.applySearchHighlight(selection, on: page)
+                self.pdfView.setCurrentSelection(selection, animate: true)
+                self.pdfView.go(to: selection)
             }
-        }
-    }
-
-    private func applySearchHighlight(_ selection: PDFSelection, on page: PDFPage) {
-        clearActiveSearchHighlight()
-
-        let lineSelections = selection.selectionsByLine()
-        let selectionsToHighlight = lineSelections.isEmpty ? [selection] : lineSelections
-        for lineSelection in selectionsToHighlight {
-            let bounds = lineSelection.bounds(for: page)
-            guard !bounds.isNull, !bounds.isEmpty else { continue }
-            let annotation = PDFAnnotation(bounds: bounds.insetBy(dx: -1, dy: -1), forType: .highlight, withProperties: nil)
-            annotation.color = UIColor.systemYellow.withAlphaComponent(0.45)
-            page.addAnnotation(annotation)
-            activeSearchHighlightAnnotations.append((page, annotation))
-        }
-
-        let bounds = selection.bounds(for: page)
-        if !bounds.isNull, !bounds.isEmpty {
-            let destination = PDFDestination(page: page, at: CGPoint(x: bounds.midX, y: bounds.midY))
-            pdfView.go(to: destination)
-        } else {
-            pdfView.go(to: selection)
         }
     }
 
@@ -410,20 +380,6 @@ final class PDFReaderViewController: UIViewController {
             guard let self else { return }
             self.applyReadingBars(animated: true)
         }
-    }
-
-    @objc private func pdfTouched(_ gesture: UILongPressGestureRecognizer) {
-        guard gesture.state == .began else { return }
-        clearActiveSearchHighlight()
-    }
-
-    private func clearActiveSearchHighlight() {
-        guard !activeSearchHighlightAnnotations.isEmpty else { return }
-        for highlight in activeSearchHighlightAnnotations {
-            highlight.page.removeAnnotation(highlight.annotation)
-        }
-        activeSearchHighlightAnnotations.removeAll()
-        pdfView.setCurrentSelection(nil, animate: false)
     }
 
     @objc private func contentsTapped() {
