@@ -315,7 +315,8 @@ final class PDFReaderViewController: UIViewController {
         scrubberHideWorkItem?.cancel()
         pageScrubber.isHidden = false
         UIView.animate(withDuration: 0.18) { [weak self] in
-            self?.pageScrubber.alpha = 1
+            guard let self else { return }
+            self.pageScrubber.alpha = 1
         }
 
         let workItem = DispatchWorkItem { [weak self] in
@@ -327,11 +328,13 @@ final class PDFReaderViewController: UIViewController {
 
     private func hidePageScrubber(animated: Bool) {
         scrubberHideWorkItem?.cancel()
-        let changes = { [weak self] in
-            self?.pageScrubber.alpha = 0
+        let changes: () -> Void = { [weak self] in
+            guard let self else { return }
+            self.pageScrubber.alpha = 0
         }
         let completion: (Bool) -> Void = { [weak self] _ in
-            self?.pageScrubber.isHidden = true
+            guard let self else { return }
+            self.pageScrubber.isHidden = true
         }
         if animated {
             UIView.animate(withDuration: 0.18, animations: changes, completion: completion)
@@ -366,7 +369,8 @@ final class PDFReaderViewController: UIViewController {
     @objc private func pdfTapped() {
         readingBarsHidden.toggle()
         UIView.animate(withDuration: 0.2) { [weak self] in
-            self?.applyReadingBars(animated: true)
+            guard let self else { return }
+            self.applyReadingBars(animated: true)
         }
     }
 
@@ -495,19 +499,19 @@ extension PDFReaderViewController: SearchViewControllerDelegate {
 }
 
 extension PDFReaderViewController: PDFContentsViewControllerDelegate {
-    func pdfContentsViewController(_ controller: PDFContentsViewController, didSelectPageAt pageIndex: Int) {
+    fileprivate func pdfContentsViewController(_ controller: PDFContentsViewController, didSelectPageAt pageIndex: Int) {
         controller.dismiss(animated: true) { [weak self] in
             self?.goToPage(index: pageIndex, highlightQuery: nil)
         }
     }
 
-    func pdfContentsViewControllerDidUpdateBookmarks(_ controller: PDFContentsViewController) {
+    fileprivate func pdfContentsViewControllerDidUpdateBookmarks(_ controller: PDFContentsViewController) {
         updateBookmarkButtonState()
     }
 }
 
 extension PDFReaderViewController: PDFPagesGridViewControllerDelegate {
-    func pdfPagesGridViewController(_ controller: PDFPagesGridViewController, didSelectPageAt pageIndex: Int) {
+    fileprivate func pdfPagesGridViewController(_ controller: PDFPagesGridViewController, didSelectPageAt pageIndex: Int) {
         controller.dismiss(animated: true) { [weak self] in
             self?.goToPage(index: pageIndex, highlightQuery: nil)
         }
@@ -515,7 +519,7 @@ extension PDFReaderViewController: PDFPagesGridViewControllerDelegate {
 }
 
 extension PDFReaderViewController: PDFPageScrubberViewDelegate {
-    func pageScrubberView(_ scrubber: PDFPageScrubberView, didSelectPageAt pageIndex: Int) {
+    fileprivate func pageScrubberView(_ scrubber: PDFPageScrubberView, didSelectPageAt pageIndex: Int) {
         scrubberHideWorkItem?.cancel()
         goToPage(index: pageIndex, highlightQuery: nil)
         showPageScrubberTemporarily()
@@ -523,23 +527,23 @@ extension PDFReaderViewController: PDFPageScrubberViewDelegate {
 }
 
 extension PDFReaderViewController: PDFPageJumpViewControllerDelegate {
-    func pageJumpViewController(_ controller: PDFPageJumpViewController, didChoosePageAt pageIndex: Int) {
+    fileprivate func pageJumpViewController(_ controller: PDFPageJumpViewController, didChoosePageAt pageIndex: Int) {
         goToPage(index: pageIndex, highlightQuery: nil)
     }
 }
 
-private struct PDFOutlineEntry {
+fileprivate struct PDFOutlineEntry {
     let title: String
     let pageIndex: Int
     let level: Int
 }
 
-private protocol PDFContentsViewControllerDelegate: AnyObject {
+fileprivate protocol PDFContentsViewControllerDelegate: AnyObject {
     func pdfContentsViewController(_ controller: PDFContentsViewController, didSelectPageAt pageIndex: Int)
     func pdfContentsViewControllerDidUpdateBookmarks(_ controller: PDFContentsViewController)
 }
 
-private final class PDFContentsViewController: UITableViewController {
+fileprivate final class PDFContentsViewController: UITableViewController {
     weak var delegate: PDFContentsViewControllerDelegate?
     var showsCloseButton = false
 
@@ -711,14 +715,9 @@ private final class PDFContentsViewController: UITableViewController {
             for index in 0..<outline.numberOfChildren {
                 guard let child = outline.child(at: index) else { continue }
                 if let pageIndex = Self.pageIndex(for: child, in: document) {
-                    let title = child.label?.trimmingCharacters(in: .whitespacesAndNewlines)
-                    entries.append(
-                        PDFOutlineEntry(
-                            title: title?.isEmpty == false ? title! : L10n.pageNumber(pageIndex + 1),
-                            pageIndex: pageIndex,
-                            level: level
-                        )
-                    )
+                    let rawTitle = child.label?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let title = rawTitle?.isEmpty == false ? rawTitle! : L10n.pageNumber(pageIndex + 1)
+                    entries.append(PDFOutlineEntry(title: title, pageIndex: pageIndex, level: level))
                 }
                 walk(child, level: level + 1)
             }
@@ -744,11 +743,11 @@ private final class PDFContentsViewController: UITableViewController {
     }
 }
 
-private protocol PDFPagesGridViewControllerDelegate: AnyObject {
+fileprivate protocol PDFPagesGridViewControllerDelegate: AnyObject {
     func pdfPagesGridViewController(_ controller: PDFPagesGridViewController, didSelectPageAt pageIndex: Int)
 }
 
-private final class PDFPagesGridViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
+fileprivate final class PDFPagesGridViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
     weak var delegate: PDFPagesGridViewControllerDelegate?
 
     private let document: PDFDocument
@@ -825,7 +824,7 @@ private final class PDFPagesGridViewController: UICollectionViewController, UICo
     }
 }
 
-private final class PDFPageThumbnailCell: UICollectionViewCell {
+fileprivate final class PDFPageThumbnailCell: UICollectionViewCell {
     static let reuseIdentifier = "PDFPageThumbnailCell"
 
     private let imageView = UIImageView()
@@ -901,11 +900,11 @@ private final class PDFPageThumbnailCell: UICollectionViewCell {
     }
 }
 
-private protocol PDFPageScrubberViewDelegate: AnyObject {
+fileprivate protocol PDFPageScrubberViewDelegate: AnyObject {
     func pageScrubberView(_ scrubber: PDFPageScrubberView, didSelectPageAt pageIndex: Int)
 }
 
-private final class PDFPageScrubberView: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     static let preferredHeight: CGFloat = 88
 
     weak var delegate: PDFPageScrubberViewDelegate?
@@ -1006,7 +1005,7 @@ private final class PDFPageScrubberView: UIView, UICollectionViewDataSource, UIC
     }
 }
 
-private final class PDFScrubberThumbnailCell: UICollectionViewCell {
+fileprivate final class PDFScrubberThumbnailCell: UICollectionViewCell {
     static let reuseIdentifier = "PDFScrubberThumbnailCell"
 
     private let imageView = UIImageView()
@@ -1063,11 +1062,11 @@ private final class PDFScrubberThumbnailCell: UICollectionViewCell {
     }
 }
 
-private protocol PDFPageJumpViewControllerDelegate: AnyObject {
+fileprivate protocol PDFPageJumpViewControllerDelegate: AnyObject {
     func pageJumpViewController(_ controller: PDFPageJumpViewController, didChoosePageAt pageIndex: Int)
 }
 
-private final class PDFPageJumpViewController: UIViewController {
+fileprivate final class PDFPageJumpViewController: UIViewController {
     weak var delegate: PDFPageJumpViewControllerDelegate?
 
     private let pageCount: Int
