@@ -48,6 +48,13 @@ final class PDFReaderViewController: UIViewController {
         action: #selector(shareTapped)
     )
 
+    private lazy var moreItem = UIBarButtonItem(
+        image: UIImage(systemName: "ellipsis.circle"),
+        style: .plain,
+        target: self,
+        action: #selector(moreTapped)
+    )
+
     init(
         book: Book,
         store: LibraryStore,
@@ -112,8 +119,8 @@ final class PDFReaderViewController: UIViewController {
         super.viewDidLoad()
         title = book.title
         navigationItem.largeTitleDisplayMode = .never
-        configureNavigationItems()
         configureToolbar()
+        configureNavigationItems()
         configureReadingTapGesture()
         loadDocument()
         observePageChanges()
@@ -138,14 +145,21 @@ final class PDFReaderViewController: UIViewController {
     }
 
     private func configureNavigationItems() {
-        let moreButton = UIBarButtonItem(
-            image: UIImage(systemName: "ellipsis.circle"),
-            style: .plain,
-            target: self,
-            action: #selector(moreTapped)
-        )
-        moreButton.accessibilityLabel = L10n.more
-        navigationItem.rightBarButtonItem = moreButton
+        contentsItem.accessibilityLabel = L10n.fileContents
+        pagesItem.accessibilityLabel = L10n.pageThumbnails
+        searchItem.accessibilityLabel = L10n.searchThisBook
+        addBookmarkItem.accessibilityLabel = L10n.addBookmark
+        shareItem.accessibilityLabel = L10n.share
+        moreItem.accessibilityLabel = L10n.more
+
+        navigationItem.rightBarButtonItems = [
+            moreItem,
+            shareItem,
+            addBookmarkItem,
+            searchItem,
+            pagesItem,
+            contentsItem
+        ]
     }
 
     private func configureToolbar() {
@@ -159,36 +173,8 @@ final class PDFReaderViewController: UIViewController {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(pageLabelLongPressed(_:)))
         pageLabel.addGestureRecognizer(longPress)
 
-        let pageItem = UIBarButtonItem(customView: pageLabel)
-        pageItem.accessibilityLabel = L10n.page
-
-        contentsItem.accessibilityLabel = L10n.fileContents
-        pagesItem.accessibilityLabel = L10n.pageThumbnails
-        searchItem.accessibilityLabel = L10n.searchThisBook
-        addBookmarkItem.accessibilityLabel = L10n.addBookmark
-        shareItem.accessibilityLabel = L10n.share
-
-        let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        let fixedSpace1 = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
-        fixedSpace1.width = 8
-        let fixedSpace2 = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
-        fixedSpace2.width = 8
-        let fixedSpace3 = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
-        fixedSpace3.width = 8
-
-        toolbarItems = [
-            contentsItem,
-            fixedSpace1,
-            pagesItem,
-            flexibleSpace,
-            searchItem,
-            fixedSpace2,
-            addBookmarkItem,
-            fixedSpace3,
-            shareItem,
-            flexibleSpace,
-            pageItem
-        ]
+        navigationItem.titleView = pageLabel
+        toolbarItems = nil
     }
 
     private func configureReadingTapGesture() {
@@ -287,7 +273,7 @@ final class PDFReaderViewController: UIViewController {
 
     private func applyReadingBars(animated: Bool) {
         navigationController?.setNavigationBarHidden(readingBarsHidden, animated: animated)
-        navigationController?.setToolbarHidden(readingBarsHidden, animated: animated)
+        navigationController?.setToolbarHidden(true, animated: animated)
         if readingBarsHidden {
             hidePageScrubber(animated: animated)
         } else {
@@ -461,7 +447,7 @@ final class PDFReaderViewController: UIViewController {
         })
         alert.addAction(UIAlertAction(title: L10n.cancel, style: .cancel))
         if let popover = alert.popoverPresentationController {
-            popover.barButtonItem = navigationItem.rightBarButtonItem
+            popover.barButtonItem = moreItem
         }
         present(alert, animated: true)
     }
@@ -492,15 +478,18 @@ extension PDFReaderViewController: UIGestureRecognizerDelegate {
 
 extension PDFReaderViewController: SearchViewControllerDelegate {
     func searchViewController(_ controller: SearchViewController, didSelect result: SearchResult) {
-        controller.dismiss(animated: true) { [weak self] in
-            self?.goToPage(index: result.pageIndex, highlightQuery: controller.searchText)
+        let query = controller.searchText
+        let dismissingController = controller.navigationController ?? controller
+        dismissingController.dismiss(animated: true) { [weak self] in
+            self?.goToPage(index: result.pageIndex, highlightQuery: query)
         }
     }
 }
 
 extension PDFReaderViewController: PDFContentsViewControllerDelegate {
     fileprivate func pdfContentsViewController(_ controller: PDFContentsViewController, didSelectPageAt pageIndex: Int) {
-        controller.dismiss(animated: true) { [weak self] in
+        let dismissingController = controller.navigationController ?? controller
+        dismissingController.dismiss(animated: true) { [weak self] in
             self?.goToPage(index: pageIndex, highlightQuery: nil)
         }
     }
@@ -512,7 +501,8 @@ extension PDFReaderViewController: PDFContentsViewControllerDelegate {
 
 extension PDFReaderViewController: PDFPagesGridViewControllerDelegate {
     fileprivate func pdfPagesGridViewController(_ controller: PDFPagesGridViewController, didSelectPageAt pageIndex: Int) {
-        controller.dismiss(animated: true) { [weak self] in
+        let dismissingController = controller.navigationController ?? controller
+        dismissingController.dismiss(animated: true) { [weak self] in
             self?.goToPage(index: pageIndex, highlightQuery: nil)
         }
     }
