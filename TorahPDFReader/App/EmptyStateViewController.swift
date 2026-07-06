@@ -1,23 +1,25 @@
+import SwiftUI
 import UIKit
 
-final class EmptyStateViewController: UIViewController {
-    private let label = UILabel()
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+final class EmptyStateViewController: UIHostingController<EmptyReaderView> {
+    init() {
+        super.init(rootView: EmptyReaderView())
         title = L10n.reader
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = L10n.emptyReaderMessage
-        label.textColor = .secondaryLabel
-        label.textAlignment = .center
-        label.numberOfLines = 0
-        label.font = .preferredFont(forTextStyle: .headline)
-        view.addSubview(label)
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            label.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+struct EmptyReaderView: View {
+    var body: some View {
+        Text(L10n.emptyReaderMessage)
+            .font(.headline)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding()
+            .background(Color(.systemBackground))
     }
 }
