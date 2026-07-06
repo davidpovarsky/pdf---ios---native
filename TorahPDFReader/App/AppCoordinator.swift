@@ -107,7 +107,6 @@ extension AppCoordinator: SearchViewControllerDelegate {
     func searchViewController(_ controller: SearchViewController, didSelect result: SearchResult) {
         do {
             guard let book = try store.book(id: result.bookID) else { return }
-            controller.navigationController?.popViewController(animated: true)
             open(book: book, initialPageIndex: result.pageIndex, highlightQuery: controller.searchText)
         } catch {
             presentError(error)
