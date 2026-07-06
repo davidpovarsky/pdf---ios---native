@@ -10,11 +10,11 @@ final class PDFReaderViewController: UIViewController {
     private let pageScrubber = PDFPageScrubberView()
     private var scrubberHideWorkItem: DispatchWorkItem?
     private var isScrubberInteracting = false
+    private var activeSearchHighlightAnnotations: [(page: PDFPage, annotation: PDFAnnotation)] = []
     private var currentPageIndex: Int = 0
     private let initialPageIndex: Int?
     private let initialHighlightQuery: String?
     private var readingBarsHidden = false
-    private var hasActiveSearchHighlight = false
 
     private lazy var contentsItem = UIBarButtonItem(
         image: UIImage(systemName: "list.bullet.rectangle"),
@@ -158,6 +158,7 @@ final class PDFReaderViewController: UIViewController {
 
     deinit {
         scrubberHideWorkItem?.cancel()
+        clearActiveSearchHighlight()
         NotificationCenter.default.removeObserver(self)
     }
 
@@ -263,10 +264,31 @@ final class PDFReaderViewController: UIViewController {
             let selection = selections.first { $0.pages.contains(page) }
             DispatchQueue.main.async { [weak self] in
                 guard let self, let selection else { return }
-                self.pdfView.setCurrentSelection(selection, animate: true)
-                self.pdfView.go(to: selection)
-                self.hasActiveSearchHighlight = true
+                self.applySearchHighlight(selection, on: page)
             }
+        }
+    }
+
+    private func applySearchHighlight(_ selection: PDFSelection, on page: PDFPage) {
+        clearActiveSearchHighlight()
+
+        let lineSelections = selection.selectionsByLine()
+        let selectionsToHighlight = lineSelections.isEmpty ? [selection] : lineSelections
+        for lineSelection in selectionsToHighlight {
+            let bounds = lineSelection.bounds(for: page)
+            guard !bounds.isNull, !bounds.isEmpty else { continue }
+            let annotation = PDFAnnotation(bounds: bounds.insetBy(dx: -1, dy: -1), forType: .highlight, withProperties: nil)
+            annotation.color = UIColor.systemYellow.withAlphaComponent(0.45)
+            page.addAnnotation(annotation)
+            activeSearchHighlightAnnotations.append((page, annotation))
+        }
+
+        let bounds = selection.bounds(for: page)
+        if !bounds.isNull, !bounds.isEmpty {
+            let destination = PDFDestination(page: page, at: CGPoint(x: bounds.midX, y: bounds.midY))
+            pdfView.go(to: destination)
+        } else {
+            pdfView.go(to: selection)
         }
     }
 
@@ -396,9 +418,12 @@ final class PDFReaderViewController: UIViewController {
     }
 
     private func clearActiveSearchHighlight() {
-        guard hasActiveSearchHighlight else { return }
+        guard !activeSearchHighlightAnnotations.isEmpty else { return }
+        for highlight in activeSearchHighlightAnnotations {
+            highlight.page.removeAnnotation(highlight.annotation)
+        }
+        activeSearchHighlightAnnotations.removeAll()
         pdfView.setCurrentSelection(nil, animate: false)
-        hasActiveSearchHighlight = false
     }
 
     @objc private func contentsTapped() {
@@ -586,10 +611,6 @@ extension PDFReaderViewController: PDFPageScrubberViewDelegate {
         showPageScrubberTemporarily()
     }
 
-    fileprivate func pageScrubberView(_ scrubber: PDFPageScrubberView, didScrubToPageAt pageIndex: Int) {
-        guard pageIndex != currentPageIndex else { return }
-        goToPage(index: pageIndex, highlightQuery: nil, updateScrubber: false)
-    }
 }
 
 extension PDFReaderViewController: PDFPageJumpViewControllerDelegate {
@@ -970,7 +991,6 @@ fileprivate protocol PDFPageScrubberViewDelegate: AnyObject {
     func pageScrubberView(_ scrubber: PDFPageScrubberView, didSelectPageAt pageIndex: Int)
     func pageScrubberViewDidBeginInteraction(_ scrubber: PDFPageScrubberView)
     func pageScrubberViewDidEndInteraction(_ scrubber: PDFPageScrubberView)
-    func pageScrubberView(_ scrubber: PDFPageScrubberView, didScrubToPageAt pageIndex: Int)
 }
 
 fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
@@ -982,9 +1002,7 @@ fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource,
     private let collectionView: UICollectionView
     private var document: PDFDocument?
     private var currentPageIndex: Int = 0
-    private var isProgrammaticScroll = false
     private var isUserDragging = false
-    private var lastScrubbedPageIndex: Int?
 
     override init(frame: CGRect) {
         let layout = UICollectionViewFlowLayout()
@@ -1012,11 +1030,7 @@ fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource,
         currentPageIndex = pageIndex
         collectionView.reloadData()
         guard let document, pageIndex >= 0, pageIndex < document.pageCount else { return }
-        isProgrammaticScroll = true
         collectionView.scrollToItem(at: IndexPath(item: pageIndex, section: 0), at: .centeredHorizontally, animated: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
-            self?.isProgrammaticScroll = false
-        }
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -1036,7 +1050,6 @@ fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource,
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         currentPageIndex = indexPath.item
-        lastScrubbedPageIndex = indexPath.item
         delegate?.pageScrubberView(self, didSelectPageAt: indexPath.item)
     }
 
@@ -1051,17 +1064,10 @@ fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource,
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         isUserDragging = true
-        lastScrubbedPageIndex = currentPageIndex
         delegate?.pageScrubberViewDidBeginInteraction(self)
     }
 
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        guard !isProgrammaticScroll else { return }
-        notifyDelegateForNearestCenteredPageIfNeeded()
-    }
-
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        notifyDelegateForNearestCenteredPageIfNeeded()
         if !decelerate {
             isUserDragging = false
             delegate?.pageScrubberViewDidEndInteraction(self)
@@ -1069,13 +1075,8 @@ fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource,
     }
 
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        notifyDelegateForNearestCenteredPageIfNeeded()
         isUserDragging = false
         delegate?.pageScrubberViewDidEndInteraction(self)
-    }
-
-    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        isProgrammaticScroll = false
     }
 
     func collectionView(
@@ -1120,45 +1121,6 @@ fileprivate final class PDFPageScrubberView: UIView, UICollectionViewDataSource,
         ])
     }
 
-    private func notifyDelegateForNearestCenteredPageIfNeeded() {
-        guard let pageIndex = nearestCenteredPageIndex(),
-              pageIndex != lastScrubbedPageIndex else { return }
-        let previousPageIndex = currentPageIndex
-        currentPageIndex = pageIndex
-        lastScrubbedPageIndex = pageIndex
-        reloadSelection(previousPageIndex: previousPageIndex, currentPageIndex: pageIndex)
-        delegate?.pageScrubberView(self, didScrubToPageAt: pageIndex)
-    }
-
-    private func reloadSelection(previousPageIndex: Int, currentPageIndex: Int) {
-        let itemCount = collectionView.numberOfItems(inSection: 0)
-        let pageIndexes = [previousPageIndex, currentPageIndex].reduce(into: [Int]()) { result, pageIndex in
-            guard !result.contains(pageIndex) else { return }
-            result.append(pageIndex)
-        }
-        let indexPaths = pageIndexes
-            .filter { $0 >= 0 && $0 < itemCount }
-            .map { IndexPath(item: $0, section: 0) }
-        guard !indexPaths.isEmpty else { return }
-        collectionView.reloadItems(at: indexPaths)
-    }
-
-    private func nearestCenteredPageIndex() -> Int? {
-        guard collectionView.numberOfItems(inSection: 0) > 0 else { return nil }
-        let visibleCenter = CGPoint(
-            x: collectionView.contentOffset.x + collectionView.bounds.midX,
-            y: collectionView.bounds.midY
-        )
-        return collectionView.indexPathsForVisibleItems.min { lhs, rhs in
-            guard let lhsAttributes = collectionView.layoutAttributesForItem(at: lhs),
-                  let rhsAttributes = collectionView.layoutAttributesForItem(at: rhs) else {
-                return lhs.item < rhs.item
-            }
-            let lhsDistance = abs(lhsAttributes.center.x - visibleCenter.x)
-            let rhsDistance = abs(rhsAttributes.center.x - visibleCenter.x)
-            return lhsDistance < rhsDistance
-        }?.item
-    }
 }
 
 fileprivate final class PDFScrubberThumbnailCell: UICollectionViewCell {
