@@ -24,6 +24,7 @@
 "delete" = "Delete";
 "cancel" = "Cancel";
 "ok" = "OK";
+"done" = "Done";
 "error" = "Error";
 "unsupported_file" = "Unsupported file";
 "open" = "Open";
@@ -37,3 +38,8 @@
 
 "share" = "Share";
 "more" = "More";
+"file_contents" = "File Contents";
+"table_of_contents" = "Contents";
+"page_thumbnails" = "Pages";
+"no_table_of_contents" = "This PDF does not contain a table of contents.";
+"jump_to_page" = "Jump to Page";
